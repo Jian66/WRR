@@ -1,0 +1,302 @@
+MODEL:
+  !author: Jian Wang, DLUT;
+
+  SETS:
+    !set of time period£ºtimes, load(MW);
+    DT/1..12/: time_hours, time_seconds, load, calHydro, calThermal, fuelUsed, minthermal;
+
+    !set of transmission lines, also called section;
+    SEC/1..6/: sec_limit,sec_sum2;
+
+    !set of hydropower plants£ºup_plant:the num of upper plant, initStorage(10e4 m3), initLevel(m):forebay water levels at the begining of year;
+    NUM/1..42/: up_plant, initStorage, initLevel, endStorage, q_max, z_min, z_max, s_min, s_max, a0, a1, a2, a3, a4, b0, b1, b2, b3, b4, section, product, ror,
+               initS1, initZ1, targetS1, targetZ1, endS1, endZ1, 
+               output2, p_release2, n_release2, t_release2, up_release2, inflow2, head2, z_down2, maxN_H2, minN_H2, t_min2, t_max2;
+
+    !set of thermal Plants;
+    NUM_T/1..11/: fuelRate;
+
+    !NUM:plant index, DT:time index; 
+    LINK(NUM,DT): inflow, s_min_all, s_max_all, maxN_H, minN_H;
+
+    !NUM:plant index, DT:time index; 
+    LINK_T(NUM_T,DT): minN_T, maxN_T, output_T;
+
+  ENDSETS
+
+    [OBJECTIVE]min = @SUM( DT(i): fuelUsed(i));
+    
+    @FOR(DT(t)|t#EQ#ttt:[BALANCE]
+      load(t) = calHydro(t) + calThermal(t);
+    );
+    
+    @FOR(LINK_T(j,t)|t#EQ#ttt:[THER_LIMIT]
+      @bnd(minN_T(j,t),output_T(j,t),maxN_T(j,t))
+    );
+
+    @FOR(DT(t)|t#EQ#ttt:[CAL_T]
+      calThermal(t) = @SUM(NUM_T(j):output_T(j,t))
+    );
+
+    @FOR(DT(t)|t#EQ#ttt:[FUEL]
+      fuelUsed(t) = @SUM(NUM_T(j): time_hours(t)* output_T(j,t)*fuelRate(j))
+    );
+
+    load1 = load(ttt);
+    hydro1 = calHydro(ttt);
+    thermal1 = calThermal(ttt);
+    fuel1 = fuelUsed(ttt);
+
+  DATA:
+    unit = 10000;
+    @POINTER( 1) = @STATUS();
+
+    ttt = 2;!ttt=2,3...12;
+
+    !data input and output;
+
+
+  ENDDATA
+
+  CALC: 
+    @FOR(NUM(i):
+      inflow2(i) = inflow(i,ttt)
+    );
+
+    @FOR(NUM(i):
+      minN_H2(i) = minN_H(i,ttt)
+    );
+
+    @FOR(NUM(i):
+      maxN_H2(i) = maxN_H(i,ttt)
+    );
+
+    @FOR(NUM(i):
+      endS1(i) = targetS1(i)
+    );
+
+    @FOR(NUM(i):
+      s_min(i) = s_min_all(i,ttt)
+    );
+
+    @FOR(NUM(i):
+      s_max(i) = s_max_all(i,ttt)
+    );
+
+  @FOR(NUM(i):
+
+      targetZ1(i) = a0(i)* targetS1(i)^4+a1(i)* targetS1(i)^3+a2(i)* targetS1(i)^2+a3(i)* targetS1(i)+a4(i);
+
+      @IFC(up_plant(i)#EQ#0:
+        up_release2(i) = 0;
+      );
+      @IFC(up_plant(i)#GT#0:
+        up_release2(i) = t_release2(up_plant(i));
+      );
+      @IFC(up_plant(i)#LT#0:
+       up_release2(31) = t_release2(30) + t_release2(27);
+      );
+
+    @IFC(ror(i)#EQ#1:
+      t_release2(i) = up_release2(i) + inflow2(i) - (endS1(i) - initS1(i))/ time_seconds(ttt) * unit;
+      endS1(i) = targetS1(i);
+      endZ1(i) = a0(i)* endS1(i)^4+a1(i)* endS1(i)^3+a2(i)* endS1(i)^2+a3(i)* endS1(i)+a4(i);
+      initZ1(i) = a0(i)* initS1(i)^4+a1(i)* initS1(i)^3+a2(i)* initS1(i)^2+a3(i)* initS1(i)+a4(i);
+      z_down2(i) = b0(i)*t_release2(i)^4+b1(i)*t_release2(i)^3+b2(i)*t_release2(i)^2+b3(i)*t_release2(i)+b4(i);
+      head2(i) = (endZ1(i) + initZ1(i))/2.0 - z_down2(i);
+
+      @IFC(t_release2(i)#GT#q_max(i):
+        p_release2(i) = q_max(i);
+       n_release2(i) = t_release2(i)- p_release2(i);
+      @ELSE 
+        p_release2(i) = t_release2(i);
+       n_release2(i) = 0;
+	);
+
+      output2(i) = product(i) * p_release2(i)* head2(i)/1000;
+
+      @IFC(output2(i)#GT# maxN_H2(i):
+        output2(i) = maxN_H2(i);
+       p_release2(i) = output2(i) / product(i)/ head2(i)*1000;
+       n_release2(i) = t_release2(i)- p_release2(i);
+	);
+    
+
+    @ELSE
+
+      t_release2(i) = up_release2(i) + inflow2(i) - (endS1(i) - initS1(i))/ time_seconds(ttt) * unit;
+      t_min2(i) = up_release2(i) + inflow2(i) - (s_max(i) - initS1(i))/ time_seconds(ttt) * unit;
+      @IFC(t_min2(i)#LT#0:
+        t_min2(i) = 0;
+	);
+      t_max2(i) = up_release2(i) + inflow2(i) - (s_min(i) - initS1(i))/ time_seconds(ttt) * unit;
+
+      @IFC(t_release2(i)#LE#0:
+        initZ1(i) = a0(i)* initS1(i)^4+a1(i)* initS1(i)^3+a2(i)* initS1(i)^2+a3(i)* initS1(i)+a4(i);
+        t_release2(i) = 0;
+	  p_release2(i) = 0;
+	  n_release2(i) = 0;
+	  endS1(i) = initS1(i) + (up_release2(i) + inflow2(i) - t_release2(i))/unit*time_seconds(ttt);
+        endZ1(i) = a0(i)* endS1(i)^4+a1(i)* endS1(i)^3+a2(i)* endS1(i)^2+a3(i)* endS1(i)+a4(i);
+        output2(i) = 0;
+
+      @ELSE
+        endZ1(i) = a0(i)* endS1(i)^4+a1(i)* endS1(i)^3+a2(i)* endS1(i)^2+a3(i)* endS1(i)+a4(i);
+        initZ1(i) = a0(i)* initS1(i)^4+a1(i)* initS1(i)^3+a2(i)* initS1(i)^2+a3(i)* initS1(i)+a4(i);
+        z_down2(i) = b0(i)*t_release2(i)^4+b1(i)*t_release2(i)^3+b2(i)*t_release2(i)^2+b3(i)*t_release2(i)+b4(i);
+	  head2(i) = (endZ1(i) + initZ1(i))/2.0 - z_down2(i);
+        p_release2(i) = @IF(t_release2(i)#LT# q_max(i), t_release2(i), q_max(i));
+        n_release2(i) = @IF(t_release2(i)#LT# q_max(i), 0 , t_release2(i) - q_max(i));
+        output2(i) = product(i) * p_release2(i)* head2(i)/1000;
+
+	  @IFC( (output2(i) - maxN_H2(i)) #GT# 1:
+          rate = output2(i) - maxN_H2(i);
+
+	    q_up = p_release2(i);
+          q_down = t_min2(i);
+          q_down2 = 0; 
+		 
+		@IFC(q_up #GT# q_down:
+		  p_release2(i) = q_down;
+		  t_release2(i) = p_release2(i);
+		  endS1(i) = initS1(i) + (up_release2(i) + inflow2(i) - t_release2(i))/unit*time_seconds(ttt);
+         	  endZ1(i) = a0(i)* endS1(i)^4+a1(i)* endS1(i)^3+a2(i)* endS1(i)^2+a3(i)* endS1(i)+a4(i);
+          	  z_down2(i) = b0(i)*t_release2(i)^4+b1(i)*t_release2(i)^3+b2(i)*t_release2(i)^2+b3(i)*t_release2(i)+b4(i);
+	   	  head2(i) = (endZ1(i) + initZ1(i))/2.0 - z_down2(i);
+               output2(i) = product(i) * p_release2(i)* head2(i)/1000;
+	
+		  @IFC(output2(i) #LE# maxN_H2(i):
+	          @WHILE( @abs(rate) #GT# 1:
+  	            p_release2(i) = (q_up + q_down)/2;	
+	 	      t_release2(i) = p_release2(i);
+      	            endS1(i) = initS1(i) + (up_release2(i) + inflow2(i) - t_release2(i))/unit*time_seconds(ttt);
+         	      endZ1(i) = a0(i)* endS1(i)^4+a1(i)* endS1(i)^3+a2(i)* endS1(i)^2+a3(i)* endS1(i)+a4(i);
+          	      z_down2(i) = b0(i)*t_release2(i)^4+b1(i)*t_release2(i)^3+b2(i)*t_release2(i)^2+b3(i)*t_release2(i)+b4(i);
+	   	      head2(i) = (endZ1(i) + initZ1(i))/2.0 - z_down2(i);
+                   output2(i) = product(i) * p_release2(i)* head2(i)/1000;	
+		
+		      @IFC(output2(i) #GT# maxN_H2(i):
+     	              q_up = p_release2(i);
+     	            @ELSE
+                    q_down = p_release2(i);
+		      );
+  		      rate = output2(i) - maxN_H2(i);
+                );
+
+		  @ELSE
+		    @WHILE( @abs(rate) #GT# 1:
+  	             p_release2(i) = (q_up + q_down2)/2;	
+	 	      t_release2(i) = t_min2(i);
+		      n_release2(i) = t_release2(i) - p_release2(i);
+      	             endS1(i) = initS1(i) + (up_release2(i) + inflow2(i) - t_release2(i))/unit*time_seconds(ttt);
+         	      endZ1(i) = a0(i)* endS1(i)^4+a1(i)* endS1(i)^3+a2(i)* endS1(i)^2+a3(i)* endS1(i)+a4(i);
+          	      z_down2(i) = b0(i)*t_release2(i)^4+b1(i)*t_release2(i)^3+b2(i)*t_release2(i)^2+b3(i)*t_release2(i)+b4(i);
+	   	      head2(i) = (endZ1(i) + initZ1(i))/2.0 - z_down2(i);
+                   output2(i) = product(i) * p_release2(i)* head2(i)/1000;	
+			
+		      @IFC(output2(i) #GT# maxN_H2(i):
+     	              q_up = p_release2(i);
+     	            @ELSE
+                    q_down2 = p_release2(i);
+		      );
+
+		      rate = output2(i) - maxN_H2(i);
+                 );
+		  );
+
+            @ELSE
+	        @WHILE( @abs(rate) #GT# 1:
+  	           p_release2(i) = (q_up + q_down2)/2;	
+	 	    t_release2(i) = t_min2(i);
+		    n_release2(i) = t_release2(i) - p_release2(i);
+      	           endS1(i) = initS1(i) + (up_release2(i) + inflow2(i) - t_release2(i))/unit*time_seconds(ttt);
+         	    endZ1(i) = a0(i)* endS1(i)^4+a1(i)* endS1(i)^3+a2(i)* endS1(i)^2+a3(i)* endS1(i)+a4(i);
+          	    z_down2(i) = b0(i)*t_release2(i)^4+b1(i)*t_release2(i)^3+b2(i)*t_release2(i)^2+b3(i)*t_release2(i)+b4(i);
+	   	    head2(i) = (endZ1(i) + initZ1(i))/2.0 - z_down2(i);
+                 output2(i) = product(i) * p_release2(i)* head2(i)/1000;	
+			
+		    @IFC(output2(i) #GT# maxN_H2(i):
+     	            q_up = p_release2(i);
+     	          @ELSE
+                  q_down2 = p_release2(i);
+		    );
+
+		    rate = output2(i) - maxN_H2(i);
+                );
+		);
+   	    );
+
+        @IFC( (output2(i) - minN_H2(i)) #LT# 1:
+	    @IFC( t_max2(i) #LT# q_max(i):
+		q_up = t_max2(i);
+	    @ELSE
+		q_up = q_max(i);
+	    );
+          q_down = p_release2(i);
+
+          p_release2(i) = q_up;
+	    t_release2(i) = p_release2(i);
+          endS1(i) = initS1(i) + (up_release2(i) + inflow2(i) - t_release2(i))/unit*time_seconds(ttt);
+          endZ1(i) = a0(i)* endS1(i)^4+a1(i)* endS1(i)^3+a2(i)* endS1(i)^2+a3(i)* endS1(i)+a4(i);
+          z_down2(i) = b0(i)*t_release2(i)^4+b1(i)*t_release2(i)^3+b2(i)*t_release2(i)^2+b3(i)*t_release2(i)+b4(i);
+	    head2(i) = (endZ1(i) + initZ1(i))/2.0 - z_down2(i);
+          output2(i) = product(i) * p_release2(i)* head2(i)/1000;	
+
+	    @IFC(output2(i) #GT# minN_H2:
+  	   	rate = output2(i) - minN_H2(i);
+
+		@WHILE( @abs(rate) #GT# 1:
+  	        p_release2(i) = (q_up + q_down)/2;	
+	 	  t_release2(i) = p_release2(i);
+      	        endS1(i) = initS1(i) + (up_release2(i) + inflow2(i) - t_release2(i))/unit*time_seconds(ttt);
+         	  endZ1(i) = a0(i)* endS1(i)^4+a1(i)* endS1(i)^3+a2(i)* endS1(i)^2+a3(i)* endS1(i)+a4(i);
+          	  z_down2(i) = b0(i)*t_release2(i)^4+b1(i)*t_release2(i)^3+b2(i)*t_release2(i)^2+b3(i)*t_release2(i)+b4(i);
+	   	  head2(i) = (endZ1(i) + initZ1(i))/2.0 - z_down2(i);
+               output2(i) = product(i) * p_release2(i)* head2(i)/1000;	
+
+		  @IFC(output2(i) #GT# minN_H2(i):
+     	          q_up = p_release2(i);
+     	        @ELSE
+                q_down = p_release2(i);
+		  );
+
+              rate = output2(i) - minN_H2(i);
+		);
+	    );
+        );
+      );
+    );
+ );
+
+    @FOR(SEC(k):
+      sec_sum2(k) = @SUM(NUM(i)|section(i)#EQ#k:output2(i))
+    );
+
+    @FOR(SEC(k):
+      @IFC(sec_sum2(k)#GT#sec_limit(k):
+        sec_gap = sec_sum2(k) - sec_limit(k);
+
+        @FOR(NUM(i):
+           @IFC(section(i)#EQ#k:
+              output2(i)=output2(i)-output2(i)/sec_sum2(k)*sec_gap;
+              p_release2(i) = output2(i) / product(i)/head2(i)*1000;
+              n_release2(i) = t_release2(i)- p_release2(i);              
+            );
+        );
+	);
+    ); 
+
+    @FOR(SEC(k):
+      sec_sum2(k) = @SUM(NUM(i)|section(i)#EQ#k:output2(i))
+    );
+
+    calHydro(ttt) = @SUM(NUM(i):output2(i));
+
+    @IFC( calHydro(ttt)+ minthermal(ttt) #GT# load(ttt):
+       calHydro(ttt) = load(ttt) - minthermal(ttt);
+    );
+
+  ENDCALC 
+
+END
+ 

@@ -1,0 +1,20 @@
+Gaussian.java is used to generate the forecast inflows. 
+
+For Jan (slight different from the code for other months due to the way to calculate water head):
+L_YNHYDROINIT_O_1.lng is used to provide feasible solutions.
+L_YNHYDRO_O_1.lng is the hydro model.
+L_YNTHERMAL_O_1.lng is the thermal model.
+L_YNHYDROTHERMAL_O_1.lng is the hydrothermal model.
+L_YNHYDROTHERMAL_S_1.lng is the simulation model.
+
+From Feb to Dec (code are the same for these months, the following code are designed for Feb, one need to copy these files and rename them for other months):
+L_YNHYDROINIT_O_2.lng
+L_YNHYDRO_O_2.lng
+L_YNTHERMAL_O_2.lng
+L_YNHYDROTHERMAL_O_2.lng
+L_YNHYDROTHERMAL_S_2.lng
+
+UpdateOpt.java is used to invoke the 60(5*12) operation files one by one automatically.  
+
+Ten trails update and optimization results for 2015 are stored in the package 2015.
+Ten trails update and optimization results for 2016 are stored in the package 2016.

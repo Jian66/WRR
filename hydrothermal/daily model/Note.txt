@@ -1,0 +1,8 @@
+S_YNHYDROINIT.lg4 is used to provide feasible solutions for hydro model.
+S_YNHYDRO.lg4 is the hydro model.
+S_YNTHERMAL.lg4 is the thermal model.
+S_HYDROTHERMAL.lg4 is used to determine the boundaries of the fuel cost.
+S_HYDROTHERMAL_Pareto is used to generate the Pareto front. 
+
+Each Excel file stores the results for a point in the Pareto front.
+

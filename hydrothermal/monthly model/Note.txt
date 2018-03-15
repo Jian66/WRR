@@ -1,0 +1,9 @@
+L_YNHYDROINIT.lg4 is used to provide feasible solutions for hydro model.
+L_YNHYDRO.lg4 is the hydro model.
+L_YNTHERMAL.lg4 is the thermal model.
+L_YNHYDROTHERMAL.lg4 is the hydrothermal model.
+
+2015_ResultsForHydroThermal.xlsx is the 2015 hydrothermal results.
+2016_ResultsForHydroThermal.xlsx is the 2016 hydrothermal results.
+
+
