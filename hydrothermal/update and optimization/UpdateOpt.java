@@ -2,6 +2,12 @@ package wrr;
 
 import com.lindo.Lingd17;
 
+/**
+ * 
+ * @author JianWang,DLUT
+ *
+ */
+
 public class UpdateOpt {
 	static String[] initname = {"L_YNHYDROINIT_O_1.lng","L_YNHYDROINIT_O_2.lng","L_YNHYDROINIT_O_3.lng"
 		,"L_YNHYDROINIT_O_4.lng","L_YNHYDROINIT_O_5.lng","L_YNHYDROINIT_O_6.lng","L_YNHYDROINIT_O_7.lng"
@@ -154,7 +160,7 @@ public class UpdateOpt {
 		// delete the Lingo environment
 		lng.LSdeleteEnvLng(pnLngEnv);
 
-		System.out.println("month:"+ii+"\tinitHydro£º"+status[0]);
+		System.out.println("month:"+ii+"\tinitHydroÂ£Âº"+status[0]);
 //		System.out.println("Set members passed back from Lingo:");
 
 		System.out.println("free Java memory: " + Runtime.getRuntime().freeMemory());
@@ -252,7 +258,7 @@ public class UpdateOpt {
 		// delete the Lingo environment
 		lng.LSdeleteEnvLng(pnLngEnv);
 
-		System.out.println("month:"+ii+"\tHydroOpt£º"+status[0]);
+		System.out.println("month:"+ii+"\tHydroOptÂ£Âº"+status[0]);
 //		System.out.println("Set members passed back from Lingo:");
 
 		System.out.println("free Java memory: " + Runtime.getRuntime().freeMemory());
@@ -350,7 +356,7 @@ public class UpdateOpt {
 		// delete the Lingo environment
 		lng.LSdeleteEnvLng(pnLngEnv);
 
-		System.out.println("month:"+ii+"\tThermalOpt£º"+status[0]);
+		System.out.println("month:"+ii+"\tThermalOptÂ£Âº"+status[0]);
 //		System.out.println("Set members passed back from Lingo:");
 
 		System.out.println("free Java memory: " + Runtime.getRuntime().freeMemory());
@@ -448,7 +454,7 @@ public class UpdateOpt {
 		// delete the Lingo environment
 		lng.LSdeleteEnvLng(pnLngEnv);
 
-		System.out.println("month:"+ii+"\tHydrothermalOpt£º"+status[0]);
+		System.out.println("month:"+ii+"\tHydrothermalOptÂ£Âº"+status[0]);
 //		System.out.println("Set members passed back from Lingo:");
 
 		System.out.println("free Java memory: " + Runtime.getRuntime().freeMemory());
@@ -546,7 +552,7 @@ public class UpdateOpt {
 		// delete the Lingo environment
 		lng.LSdeleteEnvLng(pnLngEnv);
 
-		System.out.println("month:"+ii+"\tSimulation£º"+status[0]);
+		System.out.println("month:"+ii+"\tSimulationÂ£Âº"+status[0]);
 //		System.out.println("Set members passed back from Lingo:");
 
 		System.out.println("free Java memory: " + Runtime.getRuntime().freeMemory());
@@ -558,7 +564,7 @@ public class UpdateOpt {
 		long aa = System.currentTimeMillis();
 
 		for (int i = 0; i < 12; i++) {
-			System.out.println("-------"+(i+1)+"----ÔÂ----");
+			System.out.println("-------"+(i+1)+"----Ã”Ã‚----");
 			long a = System.currentTimeMillis();
 			
 			up.solve1(i);
