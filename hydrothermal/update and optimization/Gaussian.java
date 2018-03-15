@@ -5,6 +5,12 @@ import java.util.Random;
 
 import dynamic.ReadData;
 
+/**
+ * 
+ * @author JianWang,DLUT
+ *
+ */
+
 public class Gaussian {
 	
 	static ReadData reader = new ReadData();
