@@ -6,4 +6,4 @@ package monthly model is used to store the code for monthly models and correspon
 
 package daily model is used to store the code for daily models and corresponding optimization results.
 
-package update and reoptimization is used to store the code for update and reoptimziation process and corresponding results.
+package update and optimization is used to store the code for update and optimization process and corresponding results.
