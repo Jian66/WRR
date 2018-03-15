@@ -1,4 +1,4 @@
-# WRR
+# WRR-hydrothermal
 
 Hydrothermal operations data are not publicly available and belong to the state-owned Yunnan Power Grid Corporation in China. This repository is set to store code and optimization results.
 
