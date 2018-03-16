@@ -1,6 +1,6 @@
 Gaussian.java is used to generate the forecast inflows. 
 
-For Jan (there are minor differences compared to the code for other months):
+For Jan (there are minor differences between the code for Jan and the code for other months):
 L_YNHYDROINIT_O_1.lng is used to provide feasible solutions for hydropower plants.
 L_YNHYDRO_O_1.lng is the hydro model.
 L_YNTHERMAL_O_1.lng is the thermal model.
