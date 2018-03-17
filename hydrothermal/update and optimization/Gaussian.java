@@ -35,7 +35,7 @@ public class Gaussian {
 		
 		Random r = new Random();
 		
-		int month = 1;
+		int month = 1;// month=1,2..,12
 		int plantNum = historical.length;
 		
 		forecast = new double[plantNum][month*10];
